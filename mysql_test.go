@@ -12,8 +12,8 @@ func TestMysqlNoData(t *testing.T) {
 	client, err := GetClinet()
 	assert.Nil(t, err)
 
-	tests := []*mysql{&mysql{"root", "dbname", "root", "", "", "", "5.6"},
-		&mysql{"root", "dbname", "root", "", "", "", "latest"}}
+	tests := []*Mysql{&Mysql{"root", "dbname", "root", "", "", "5.6"},
+		&Mysql{"root", "dbname", "root", "", "", "latest"}}
 
 	for _, m := range tests {
 
@@ -35,15 +35,18 @@ func TestMysqlWithData(t *testing.T) {
 		panic(err)
 	}
 	dataDir := strings.Replace(dir, " ", "\\ ", -1) + "/data"
-	tests := []*mysql{&mysql{"root", "world", "root", "", "", dataDir, "latest"}}
+	tests := []*Mysql{&Mysql{"root", "world", "root", "", dataDir, "latest"}}
 	for _, m := range tests {
 
 		db, cid, err := m.CreatDockerMysqlContainer(client)
+		assert.Nil(t, err)
 		rows, err := db.Query("SELECT *  FROM  City")
-		assert.True(t, rows.Next(), "expected true got %s ", err)
+		assert.True(t, rows.Next(), "expected true got  ", err)
+
 		db.Close()
 		err = RemoveContiner(client, cid)
 		assert.Nil(t, err)
+
 	}
 
 }
