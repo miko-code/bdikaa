@@ -21,8 +21,9 @@ go get github.com/miko-code/bdikaa
 	}
 	  //create  Mysql with default  parameters.
 	m := bdikaa.NewMysql()
-	
+	 
 	 //create  Mysql with custome  parameters and Data.
+	 dataDir:="PATH TO THE SQL FILE DIR"
 	m := bdikaa.NewMysql("root", "world", "root", "", dataDir, "latest")
 	
 	
