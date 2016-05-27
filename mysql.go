@@ -12,36 +12,36 @@ import (
 )
 
 type Mysql struct {
-	rootPass string
-	dbName   string
-	userName string
-	pass     string
-	dataDir  string
-	tag      string
+	RootPass string
+	DbName   string
+	UserName string
+	Pass     string
+	DataDir  string
+	Tag      string
 }
 
 func NewMysql() *Mysql {
 	return &Mysql{
-		rootPass: "root",
-		dbName:   "dbname",
-		userName: "root",
-		tag:      "latest",
+		RootPass: "root",
+		DbName:   "dbname",
+		UserName: "root",
+		Tag:      "latest",
 	}
 }
 
 func creatDockerConfig(m *Mysql) *docker.Config {
 	conf := &docker.Config{
-		Image: fmt.Sprintf("mysql:%s", m.tag),
-		Env: []string{fmt.Sprintf("MYSQL_ROOT_PASSWORD=%s", m.rootPass),
-			fmt.Sprintf("MYSQL_DATABASE=%s", m.dbName),
+		Image: fmt.Sprintf("mysql:%s", m.Tag),
+		Env: []string{fmt.Sprintf("MYSQL_ROOT_PASSWORD=%s", m.RootPass),
+			fmt.Sprintf("MYSQL_DATABASE=%s", m.DbName),
 		},
 	}
 
-	if m.userName != "" {
-		conf.Env = append(conf.Env, fmt.Sprintf("MYSQL_USER=%s", m.userName))
+	if m.UserName != "" {
+		conf.Env = append(conf.Env, fmt.Sprintf("MYSQL_USER=%s", m.UserName))
 	}
-	if m.pass != "" {
-		conf.Env = append(conf.Env, fmt.Sprintf("MYSQL_PASSWORD=%s", m.pass))
+	if m.Pass != "" {
+		conf.Env = append(conf.Env, fmt.Sprintf("MYSQL_PASSWORD=%s", m.Pass))
 	}
 
 	return conf
@@ -49,8 +49,8 @@ func creatDockerConfig(m *Mysql) *docker.Config {
 
 func creatDockerHostConfig(m *Mysql) *docker.HostConfig {
 	var dh *docker.HostConfig
-	if m.dataDir != "" {
-		dh = &docker.HostConfig{Binds: []string{m.dataDir + ":/docker-entrypoint-initdb.d"}}
+	if m.DataDir != "" {
+		dh = &docker.HostConfig{Binds: []string{m.DataDir + ":/docker-entrypoint-initdb.d"}}
 	}
 
 	return dh
@@ -60,7 +60,7 @@ func creatDockerHostConfig(m *Mysql) *docker.HostConfig {
 func checkIfAlive(m *Mysql, client *docker.Client, cid string) (*sql.DB, error) {
 	dc, err := client.InspectContainer(cid)
 	ip := dc.NetworkSettings.IPAddress
-	url := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", m.userName, m.rootPass, ip, 3306, m.dbName)
+	url := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", m.UserName, m.RootPass, ip, 3306, m.DbName)
 	log.Println(url)
 	db, err := sql.Open("mysql", url)
 	if err != nil {
@@ -86,7 +86,7 @@ func checkIfAlive(m *Mysql, client *docker.Client, cid string) (*sql.DB, error) 
 //create the mysql container and returning  the container ID  and SQL db instance .
 func (m *Mysql) CreatDockerMysqlContainer(client *docker.Client) (*sql.DB, string, error) {
 
-	err := GetImageIfNotExsit(client, "mysql", m.tag)
+	err := GetImageIfNotExsit(client, "mysql", m.Tag)
 	if err != nil {
 		log.Println("enable to create Continer ", err.Error())
 		return nil, "", err

@@ -23,9 +23,9 @@ go get github.com/miko-code/bdikaa
 	m := bdikaa.NewMysql()
 	 
 	 //create  Mysql with custome  parameters and Data.
-	 dataDir:="PATH TO THE SQL FILE DIR"
-	m := bdikaa.NewMysql("root", "world", "root", "", dataDir, "latest")
-	
+	dataDir:="PATH TO THE SQL FILE DIR"
+	m := bdikaa.NewMysql()
+	m.m.DataDir = dataDir
 	
 	
 	//create the mysql container and returning  the container ID  and SQL db instance .
