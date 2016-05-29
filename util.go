@@ -9,7 +9,7 @@ import (
 )
 
 //retry count for conecting continer DB
-const RETRY = 7
+const RETRY = 5
 
 //get the api clinet for linux or OSX.
 func GetClinet() (*docker.Client, error) {
