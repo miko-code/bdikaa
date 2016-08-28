@@ -9,6 +9,7 @@ import (
 	"github.com/fsouza/go-dockerclient"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/pborman/uuid"
+	"golang.org/x/net/context"
 )
 
 type Mysql struct {
@@ -20,6 +21,7 @@ type Mysql struct {
 	Tag      string
 }
 
+//NewMysql returning defult  values for the mysql configoration.
 func NewMysql() *Mysql {
 	return &Mysql{
 		RootPass: "root",
@@ -29,7 +31,10 @@ func NewMysql() *Mysql {
 	}
 }
 
-func creatDockerConfig(m *Mysql) *docker.Config {
+//
+
+func (m *Mysql) CreatDockerConfig() *docker.Config {
+
 	conf := &docker.Config{
 		Image: fmt.Sprintf("mysql:%s", m.Tag),
 		Env: []string{fmt.Sprintf("MYSQL_ROOT_PASSWORD=%s", m.RootPass),
@@ -47,7 +52,25 @@ func creatDockerConfig(m *Mysql) *docker.Config {
 	return conf
 }
 
-func creatDockerHostConfig(m *Mysql) *docker.HostConfig {
+// func creatDockerConfig(m *Mysql) *docker.Config {
+// 	conf := &docker.Config{
+// 		Image: fmt.Sprintf("mysql:%s", m.Tag),
+// 		Env: []string{fmt.Sprintf("MYSQL_ROOT_PASSWORD=%s", m.RootPass),
+// 			fmt.Sprintf("MYSQL_DATABASE=%s", m.DbName),
+// 		},
+// 	}
+
+// 	if m.UserName != "" {
+// 		conf.Env = append(conf.Env, fmt.Sprintf("MYSQL_USER=%s", m.UserName))
+// 	}
+// 	if m.Pass != "" {
+// 		conf.Env = append(conf.Env, fmt.Sprintf("MYSQL_PASSWORD=%s", m.Pass))
+// 	}
+
+// 	return conf
+// }
+
+func (m *Mysql) CreatDockerHostConfig() *docker.HostConfig {
 	var dh *docker.HostConfig
 	if m.DataDir != "" {
 		dh = &docker.HostConfig{Binds: []string{m.DataDir + ":/docker-entrypoint-initdb.d"}}
@@ -71,32 +94,31 @@ func checkIfAlive(m *Mysql, client *docker.Client, cid string) (*sql.DB, error) 
 
 		log.Println("try to  conect continer DB  #", i)
 		time.Sleep(5 * time.Second)
-		err = db.Ping()
+		err := db.Ping()
 		if err != nil {
-			log.Println("db ping error ", err.Error())
+			log.Println("db ping error ", err)
 			continue
 		}
-
 		break
 	}
-
 	return db, err
 }
 
-//create the mysql container and returning  the container ID  and SQL db instance .
-func (m *Mysql) CreatDockerMysqlContainer(client *docker.Client) (*sql.DB, string, error) {
+//CreatDockerMysqlContainer creating the  mysql container and returning  the container ID  and SQL db instance .
+func (m *Mysql) CreateContiner(client *docker.Client) (interface{}, string, error) {
 
 	err := GetImageIfNotExsit(client, "mysql", m.Tag)
 	if err != nil {
 		log.Println("enable to create Continer ", err.Error())
 		return nil, "", err
 	}
-
-	conf := creatDockerConfig(m)
-	hostConf := creatDockerHostConfig(m)
+	conf := m.CreatDockerConfig()
+	hostConf := m.CreatDockerHostConfig()
+	netConf := &docker.NetworkingConfig{}
 
 	name := "bdika_" + uuid.New()
-	opts := docker.CreateContainerOptions{name, conf, hostConf}
+
+	opts := docker.CreateContainerOptions{name, conf, hostConf, netConf, context.Background()}
 
 	c, err := client.CreateContainer(opts)
 	if err != nil {
@@ -117,4 +139,11 @@ func (m *Mysql) CreatDockerMysqlContainer(client *docker.Client) (*sql.DB, strin
 	}
 
 	return db, c.ID, nil
+}
+func (m *Mysql) RemoveContiner(c *docker.Client, cid string) error {
+	err := RemoveContinerID(c, cid)
+	if err != nil {
+		return err
+	}
+	return nil
 }

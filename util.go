@@ -1,17 +1,18 @@
 package bdikaa
 
 import (
-	"bytes"
 	"log"
+	"os"
 	"runtime"
+	"time"
 
 	"github.com/fsouza/go-dockerclient"
 )
 
-//retry count for conecting continer DB
+//RETRY count for conecting continer DB
 const RETRY = 5
 
-//get the api clinet for linux or OSX.
+//GetClinet get the api clinet for linux or OSX.
 func GetClinet() (*docker.Client, error) {
 
 	if runtime.GOOS == "linux" {
@@ -21,8 +22,8 @@ func GetClinet() (*docker.Client, error) {
 	return docker.NewClientFromEnv()
 }
 
-//remove continer by the continer ID.
-func RemoveContiner(client *docker.Client, cid string) error {
+//RemoveContiner by the continer ID.
+func RemoveContinerID(client *docker.Client, cid string) error {
 	err := client.StopContainer(cid, 5)
 	if err != nil {
 		log.Println("err %s", err.Error())
@@ -31,12 +32,18 @@ func RemoveContiner(client *docker.Client, cid string) error {
 	return client.RemoveContainer(docker.RemoveContainerOptions{ID: cid})
 }
 
-//pull the correct image and tag.
+//GetImageIfNotExsit pull the correct image and tag.
 func GetImageIfNotExsit(client *docker.Client, image string, tag string) error {
 
-	var buf bytes.Buffer
-	opts := docker.PullImageOptions{image, "base", tag, &buf, false}
+	//	var buf bytes.Buffer
+	opts := docker.PullImageOptions{
+		Repository:        image,
+		Tag:               tag,
+		OutputStream:      os.Stdout,
+		InactivityTimeout: time.Duration(time.Minute * 1),
+	}
+	//	opts := docker.PullImageOptions{image, tag, "", &buf, false, time.Duration(time.Minute * 5)}
 	auth := docker.AuthConfiguration{}
-	log.Printf("trying to pull image {%s}:{%s}", image, tag)
+	log.Printf("pulling image if nedded {%s}:{%s}", image, tag)
 	return client.PullImage(opts, auth)
 }
