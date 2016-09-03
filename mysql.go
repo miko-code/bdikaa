@@ -52,24 +52,6 @@ func (m *Mysql) CreatDockerConfig() *docker.Config {
 	return conf
 }
 
-// func creatDockerConfig(m *Mysql) *docker.Config {
-// 	conf := &docker.Config{
-// 		Image: fmt.Sprintf("mysql:%s", m.Tag),
-// 		Env: []string{fmt.Sprintf("MYSQL_ROOT_PASSWORD=%s", m.RootPass),
-// 			fmt.Sprintf("MYSQL_DATABASE=%s", m.DbName),
-// 		},
-// 	}
-
-// 	if m.UserName != "" {
-// 		conf.Env = append(conf.Env, fmt.Sprintf("MYSQL_USER=%s", m.UserName))
-// 	}
-// 	if m.Pass != "" {
-// 		conf.Env = append(conf.Env, fmt.Sprintf("MYSQL_PASSWORD=%s", m.Pass))
-// 	}
-
-// 	return conf
-// }
-
 func (m *Mysql) CreatDockerHostConfig() *docker.HostConfig {
 	var dh *docker.HostConfig
 	if m.DataDir != "" {
@@ -80,7 +62,7 @@ func (m *Mysql) CreatDockerHostConfig() *docker.HostConfig {
 }
 
 //check if container db is responsive.
-func checkIfAlive(m *Mysql, client *docker.Client, cid string) (*sql.DB, error) {
+func (m *Mysql) ConectToStorage(client *docker.Client, cid string) (interface{}, error) {
 	dc, err := client.InspectContainer(cid)
 	ip := dc.NetworkSettings.IPAddress
 	url := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", m.UserName, m.RootPass, ip, 3306, m.DbName)
@@ -101,6 +83,7 @@ func checkIfAlive(m *Mysql, client *docker.Client, cid string) (*sql.DB, error) 
 		}
 		break
 	}
+
 	return db, err
 }
 
@@ -132,7 +115,7 @@ func (m *Mysql) CreateContiner(client *docker.Client) (interface{}, string, erro
 		return nil, "", err
 	}
 
-	db, err := checkIfAlive(m, client, c.ID)
+	db, err := m.ConectToStorage(client, c.ID)
 
 	if err != nil {
 		log.Println("enable to to conecnte  DB ", err.Error())
