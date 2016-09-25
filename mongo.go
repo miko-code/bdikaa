@@ -14,7 +14,15 @@ import (
 )
 
 type Mongo struct {
-	Tag string
+	Tag        string
+	Seeds      string
+	FileName   string
+	DbName     string
+	Collection string
+}
+
+func NewMongoDB() *Mongo {
+	return &Mongo{"latest", "", "", "", ""}
 }
 
 func (m *Mongo) CreatDockerConfig() *docker.Config {
@@ -24,9 +32,11 @@ func (m *Mongo) CreatDockerConfig() *docker.Config {
 	return conf
 }
 func (m *Mongo) CreatDockerHostConfig() *docker.HostConfig {
-	//add data dir
-	conf := &docker.HostConfig{}
-	return conf
+	var dh *docker.HostConfig
+	if m.Seeds != "" {
+		dh = &docker.HostConfig{Binds: []string{m.Seeds + ":/data/seeds"}}
+	}
+	return dh
 }
 
 func (m *Mongo) CreateContiner(client *docker.Client) (interface{}, string, error) {
@@ -80,6 +90,31 @@ func (m *Mongo) ConectToStorage(client *docker.Client, cid string) (interface{},
 			continue
 		}
 		break
+	}
+
+	if m.Seeds != "" {
+
+		cmd := fmt.Sprintf("mongoimport -d %s -c %s /data/seeds/%s", m.DbName, m.Collection, m.FileName)
+		opts := docker.CreateExecOptions{
+			Container:    cid,
+			AttachStdin:  true,
+			AttachStdout: true,
+			AttachStderr: false,
+			Tty:          false,
+			Cmd:          []string{"bash", cmd},
+		}
+		fmt.Println("trying to load %s", cmd)
+		execID, err := client.CreateExec(opts)
+		if err != nil {
+			return nil, err
+		}
+		config := docker.StartExecOptions{
+			Detach: true,
+		}
+		err = client.StartExec(execID.ID, config)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return session, nil

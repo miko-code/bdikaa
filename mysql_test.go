@@ -39,7 +39,7 @@ func TestMysqlWithData(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	dataDir := strings.Replace(dir, " ", "\\ ", -1) + "/data"
+	dataDir := strings.Replace(dir, " ", "\\ ", -1) + "/data/sql"
 	tests := []Continer{&Mysql{"root", "dbname", "root", "", dataDir, "5.6"},
 		&Mysql{"root", "dbname", "root", "", dataDir, "latest"}}
 
