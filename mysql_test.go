@@ -1,11 +1,10 @@
 package bdikaa
 
 import (
+	"database/sql"
 	"os"
 	"strings"
 	"testing"
-
-	"database/sql"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/stretchr/testify/assert"
@@ -21,13 +20,13 @@ func TestMysqlNoData(t *testing.T) {
 	for _, m := range tests {
 
 		i, cid, err := m.CreateContiner(client)
+		defer m.RemoveContiner(client, cid)
 		assert.Nil(t, err)
 		db := i.(*sql.DB)
 		err = db.Ping()
 		assert.Nil(t, err)
 		db.Close()
-		err = m.RemoveContiner(client, cid)
-		assert.Nil(t, err)
+
 	}
 }
 
@@ -46,16 +45,17 @@ func TestMysqlWithData(t *testing.T) {
 	for _, m := range tests {
 
 		i, cid, err := m.CreateContiner(client)
+		defer m.RemoveContiner(client, cid)
 		assert.Nil(t, err)
 		db := i.(*sql.DB)
 		err = db.Ping()
 		assert.Nil(t, err)
-		rows, err := db.Query("SELECT *  FROM  City")
+
+		rows, err := db.Query("SELECT *  FROM  world.City")
+		assert.Nil(t, err)
 		assert.True(t, rows.Next(), "expected true got  ", err)
 
 		db.Close()
-		err = m.RemoveContiner(client, cid)
-		assert.Nil(t, err)
 
 	}
 

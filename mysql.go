@@ -31,8 +31,7 @@ func NewMysql() *Mysql {
 	}
 }
 
-//
-
+//CreatDockerConfig set continer properties.
 func (m *Mysql) CreatDockerConfig() *docker.Config {
 
 	conf := &docker.Config{
@@ -52,6 +51,7 @@ func (m *Mysql) CreatDockerConfig() *docker.Config {
 	return conf
 }
 
+//CreatDockerHostConfig set host config properties.
 func (m *Mysql) CreatDockerHostConfig() *docker.HostConfig {
 	var dh *docker.HostConfig
 	if m.DataDir != "" {
@@ -61,8 +61,8 @@ func (m *Mysql) CreatDockerHostConfig() *docker.HostConfig {
 	return dh
 }
 
-//check if container db is responsive.
-func (m *Mysql) ConectToStorage(client *docker.Client, cid string) (interface{}, error) {
+//ConnectToStorage check if container db is responsive.
+func (m *Mysql) ConnectToStorage(client *docker.Client, cid string) (interface{}, error) {
 	dc, err := client.InspectContainer(cid)
 	ip := dc.NetworkSettings.IPAddress
 	url := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", m.UserName, m.RootPass, ip, 3306, m.DbName)
@@ -74,7 +74,7 @@ func (m *Mysql) ConectToStorage(client *docker.Client, cid string) (interface{},
 
 	for i := 0; i < RETRY; i++ {
 
-		log.Println("try to  conect continer DB  #", i)
+		log.Println("try to  connect continer DB  #", i)
 		time.Sleep(5 * time.Second)
 		err := db.Ping()
 		if err != nil {
@@ -87,7 +87,7 @@ func (m *Mysql) ConectToStorage(client *docker.Client, cid string) (interface{},
 	return db, err
 }
 
-//CreatDockerMysqlContainer creating the  mysql container and returning  the container ID  and SQL db instance .
+//CreateContiner creating the  mysql container and returning  the container ID  and SQL db instance .
 func (m *Mysql) CreateContiner(client *docker.Client) (interface{}, string, error) {
 
 	err := GetImageIfNotExsit(client, "mysql", m.Tag)
@@ -99,8 +99,7 @@ func (m *Mysql) CreateContiner(client *docker.Client) (interface{}, string, erro
 	hostConf := m.CreatDockerHostConfig()
 	netConf := &docker.NetworkingConfig{}
 
-	name := "bdika_" + uuid.New()
-
+	name := fmt.Sprintf("bdika_%s", uuid.New())
 	opts := docker.CreateContainerOptions{name, conf, hostConf, netConf, context.Background()}
 
 	c, err := client.CreateContainer(opts)
@@ -115,7 +114,7 @@ func (m *Mysql) CreateContiner(client *docker.Client) (interface{}, string, erro
 		return nil, "", err
 	}
 
-	db, err := m.ConectToStorage(client, c.ID)
+	db, err := m.ConnectToStorage(client, c.ID)
 
 	if err != nil {
 		log.Println("enable to to conecnte  DB ", err.Error())
@@ -123,6 +122,8 @@ func (m *Mysql) CreateContiner(client *docker.Client) (interface{}, string, erro
 
 	return db, c.ID, nil
 }
+
+//RemoveContiner by continer ID.
 func (m *Mysql) RemoveContiner(c *docker.Client, cid string) error {
 	err := RemoveContinerID(c, cid)
 	if err != nil {
