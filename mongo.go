@@ -96,21 +96,25 @@ func (m *Mongo) ConnectToStorage(client *docker.Client, cid string) (interface{}
 		log.Println("enable to  connect mongo continer  ", err.Error())
 		return nil, err
 	}
-	for i := 0; i < RETRY; i++ {
+	for i := 1; i < RETRY; i++ {
 
 		log.Println("try to  connect continer DB  %d", i)
-		time.Sleep(5 * time.Second)
+		//wating for continer to be reday for action.
+		time.Sleep(WAIT * time.Second)
 		err := session.Ping()
 		if err != nil {
 			log.Println("db ping error ", err)
 			continue
 		}
 		if m.Seeds != "" {
+
 			err := importData(m, cid, client)
 			if err != nil {
 				log.Println("importData error ", err)
-				return nil, err
+				continue
 			}
+			//Wating for data to be loaded.
+			time.Sleep(WAIT * time.Second)
 
 		}
 
@@ -142,7 +146,7 @@ func importData(m *Mongo, cid string, client *docker.Client) error {
 		Tty:          true,
 		Cmd:          []string{"bash", "-c", cmd},
 	}
-	fmt.Println("trying to load %s", cmd)
+	log.Println("trying to load %s", cmd)
 
 	execID, err := client.CreateExec(opts)
 	if err != nil {
@@ -161,7 +165,7 @@ func importData(m *Mongo, cid string, client *docker.Client) error {
 	go func() error {
 		err := client.StartExec(execID.ID, config)
 		if err != nil {
-			fmt.Println("errr: %s", err.Error)
+			log.Println("errr: %s", err.Error)
 			return err
 		}
 		return nil

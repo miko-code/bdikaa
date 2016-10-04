@@ -9,8 +9,11 @@ import (
 	"github.com/fsouza/go-dockerclient"
 )
 
-//RETRY count for conecting continer DB
+//RETRY count for conecting continer DB.
 const RETRY = 5
+
+//Wait time for data to load into dtorage.
+const WAIT = 3
 
 //GetClinet get the api clinet for linux or OSX.
 func GetClinet() (*docker.Client, error) {

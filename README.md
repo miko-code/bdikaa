@@ -1,11 +1,11 @@
 # bdikaa
-Bdikaa is a framework to test your database action against docker container instead of local databases.
+Bdikaa is a framework to test your database action against Docker container instead of local databases.
 It will pull the correct image and start the container after the test is done it will be removed.
 In order to use it you need the get the client  and an instance of the db struct.
 
  -   Without parameters you will get default Database and you will need to create and add  your own data. 
  
- - You can add a path to existing sql file and it will loaded to the container DB.
+ - You can add a path to existing Sql file and it will loaded to the container DB.
 
 ## Installation
 
@@ -14,7 +14,7 @@ go get github.com/miko-code/bdikaa
 ```
 ## Usage
 ```
-    //create the docker Api client.
+    //create the Docker Api client.
     c, err := bdikaa.GetClinet()
 	if err != nil {
 		fmt.Println(err.Error())
@@ -22,25 +22,25 @@ go get github.com/miko-code/bdikaa
 	  //create  Mysql with default  parameters.
 	m := bdikaa.NewMysql()
 	 
-	 //create  Mysql with custome  parameters and Data.
+	 //create  Mysql with custom  parameters and Data.
 	dataDir:="PATH TO THE SQL FILE DIR"
 	m := bdikaa.NewMysql()
 	m.DataDir = dataDir
 	
 	
-	//create the mysql container and returning  the container ID  and SQL db instance .
-	db, cid, err := m.CreatDockerMysqlContainer(c)
+	//create the Mysql container and returning  the container ID  and SQL db instance .
+	i, cid, err := m.CreateContiner(client)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
+	//clean up and remove the container 
+	defer m.RemoveContiner(client, cid)	
+	
+	db, ok := i.(*sql.DB)
 
-	db /// do stuf on db
+	db /// do stuff on db
 
-//clean up and remove the continer 
-	bdikaa.RemoveContiner(c, cid)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
+
 ```
 
 ## Credits

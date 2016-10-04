@@ -72,10 +72,11 @@ func (m *Mysql) ConnectToStorage(client *docker.Client, cid string) (interface{}
 		log.Println("sql.Open  ", err.Error())
 	}
 
-	for i := 0; i < RETRY; i++ {
+	for i := 1; i < RETRY; i++ {
 
 		log.Println("try to  connect continer DB  #", i)
-		time.Sleep(5 * time.Second)
+		//wating for continer to be reday for action.
+		time.Sleep(WAIT * time.Second)
 		err := db.Ping()
 		if err != nil {
 			log.Println("db ping error ", err)

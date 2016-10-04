@@ -5,7 +5,6 @@ import (
 	"os"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/mgo.v2"
@@ -29,7 +28,9 @@ func TestMongoNoData(t *testing.T) {
 		i, cid, err := m.CreateContiner(client)
 		assert.Nil(t, err)
 		defer m.RemoveContiner(client, cid)
-		session := i.(*mgo.Session)
+		session, ok := i.(*mgo.Session)
+		assert.Equal(t, true, ok)
+
 		assert.NotNil(t, session)
 
 		c := session.DB("Country").C("Citys")
@@ -59,10 +60,10 @@ func TestMongoWithData(t *testing.T) {
 		assert.Nil(t, err)
 		defer m.RemoveContiner(client, cid)
 		session := i.(*mgo.Session)
+		session, ok := i.(*mgo.Session)
+		assert.Equal(t, true, ok)
 		assert.NotNil(t, session)
-
 		result := Citys{}
-		time.Sleep(5 * time.Second)
 		c := session.DB("country").C("citys")
 		err = c.Find(bson.M{"city": "GRANBY"}).One(&result)
 		assert.Nil(t, err)
